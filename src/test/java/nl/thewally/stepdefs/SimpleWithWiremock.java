@@ -89,7 +89,7 @@ public class SimpleWithWiremock {
         }
     }
 
-    @When("^send request message to service getBooksForUsers for (user (\\d+)|all users)$")
+    @When("^send request message to service getBooksForUsers for user (\\d+)$")
     public void sendRequestMessageToServiceGetBooksForUsersForUser(int user) throws Throwable {
         if(user != 0) {
 
@@ -98,7 +98,7 @@ public class SimpleWithWiremock {
         }
     }
 
-    @Then("^getBookForUser returns for (user (\\d+)|all users) with their own books$")
+    @Then("^getBookForUser returns for user (\\d+) with their own books$")
     public void getbookforuserReturnsForUserWithTheirOwnBooks(int user) throws Throwable {
         if(user != 0) {
 
