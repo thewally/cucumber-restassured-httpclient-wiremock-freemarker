@@ -11,14 +11,6 @@ import freemarker.template.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
 public class TemplateHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(TemplateHandler.class);
