@@ -1,5 +1,6 @@
 package nl.thewally.stepdefs;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import cucumber.api.PendingException;
 import cucumber.api.java.Before;
@@ -14,20 +15,23 @@ import org.junit.Rule;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 public class SimpleWithWiremock {
 
     @Rule
     public WireMockRule generic = new WireMockRule(8888);
-    private final Stub stub = new Stub();
-
 
     private List<User> users;
     private List<Book> books;
 
     @Before
     public void prepare() {
-        stub.start(generic, 8888);
+        generic.start();
+        WireMock.configureFor("localhost", 8888);
+        WireMock.reset();
     }
 
     @Given("^users are available$")
@@ -60,13 +64,28 @@ public class SimpleWithWiremock {
 
     @Given("^service getBooksForUsers returns response for all users and for each user$")
     public void serviceGetBooksForUsersReturnsResponseForAllUsersAndForEachUser() throws Throwable {
-
-
         TemplateHandler template = new TemplateHandler();
-        template.setTemplate("responses/getBooksForUsers.response.xml.ftl");
-        stub.setResponse(200, "/getBooksForUsers", "getBooksForUsers", template);
+        for(User user:users) {
+            template.setTemplate("responses/getBooksForUsers.response.xml.ftl");
+            template.setValue("id", user.getId());
+            template.setValue("lastName", user.getLastName());
+            template.setValue("firstName", user.getFirstName());
+            template.setValue("streetName", user.getStreetName());
+            template.setValue("houseNumber", user.getHouseNumber());
+            template.setValue("postalCode", user.getPostalCode());
+            template.setValue("city", user.getCity());
+            template.setValue("books", user.getBooks());
 
+            UUID uuidVal = UUID.randomUUID();
+            generic.stubFor(post(urlEqualTo("/getBooksForUsers"))
+                    .withId(uuidVal)
+                    .withRequestBody(containing(String.valueOf(user.getId())))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "text/xml")
+                            .withBody(template.getOutput())));
 
+        }
     }
 
     @When("^send request message to service getBooksForUsers for (user (\\d+)|all users)$")
@@ -85,5 +104,10 @@ public class SimpleWithWiremock {
         } else {
 
         }
+    }
+
+    @Then("^stop test$")
+    public void stopTest() throws Throwable {
+        Thread.sleep(300000);
     }
 }

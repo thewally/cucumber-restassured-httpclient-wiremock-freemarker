@@ -15,6 +15,7 @@ Feature: HttpClient
     Given user 2 has books with id
       | 2 |
     Given service getBooksForUsers returns response for all users and for each user
+    Then stop test
 
   Scenario: send a request to getBooksForUsers for user 1
     When send request message to service getBooksForUsers for user 1
