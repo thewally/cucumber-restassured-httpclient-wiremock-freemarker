@@ -82,9 +82,7 @@ public class User {
         return books;
     }
 
-    public void setBook(List<Book> books) {
-        for(Book book: books) {
-            books.add(book);
-        }
+    public void setBooks(List<Book> books) {
+        this.books = books;
     }
 }

@@ -3,6 +3,7 @@ package nl.thewally.stepdefs;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import cucumber.api.PendingException;
+import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
@@ -57,7 +58,7 @@ public class SimpleWithWiremock {
 
         for(User user:users) {
             if(user.getId() == userId) {
-                user.setBook(addingBooks);
+                user.setBooks(addingBooks);
             }
         }
     }
@@ -109,5 +110,10 @@ public class SimpleWithWiremock {
     @Then("^stop test$")
     public void stopTest() throws Throwable {
         Thread.sleep(300000);
+    }
+
+    @After
+    public void close() {
+        generic.stop();
     }
 }
