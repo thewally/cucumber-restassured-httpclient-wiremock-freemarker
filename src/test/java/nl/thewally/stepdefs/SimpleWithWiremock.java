@@ -1,22 +1,34 @@
 package nl.thewally.stepdefs;
 
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import cucumber.api.PendingException;
+import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import nl.thewally.freemarker.Book;
+import nl.thewally.freemarker.TemplateHandler;
 import nl.thewally.freemarker.User;
+import nl.thewally.stub.Stub;
+import org.junit.Rule;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by arjen on 10-4-17.
- */
 public class SimpleWithWiremock {
+
+    @Rule
+    public WireMockRule generic = new WireMockRule(8888);
+    private final Stub stub = new Stub();
+
 
     private List<User> users;
     private List<Book> books;
+
+    @Before
+    public void prepare() {
+        stub.start(generic, 8888);
+    }
 
     @Given("^users are available$")
     public void usersAreAvailable(List<User> users) throws Throwable {
@@ -48,6 +60,12 @@ public class SimpleWithWiremock {
 
     @Given("^service getBooksForUsers returns response for all users and for each user$")
     public void serviceGetBooksForUsersReturnsResponseForAllUsersAndForEachUser() throws Throwable {
+
+
+        TemplateHandler template = new TemplateHandler();
+        template.setTemplate("responses/getBooksForUsers.response.xml.ftl");
+        stub.setResponse(200, "/getBooksForUsers", "getBooksForUsers", template);
+
 
     }
 
