@@ -21,9 +21,9 @@ Feature: HttpClient
     When send request message to service getBooksForUsers for user 1
     Then getBookForUser returns for user 1 with their own books
 
-  Scenario: send a request to getBooksForUsers for all users
-    When send request message to service getBooksForUsers for all users
-    Then getBookForUser returns for all users with their own books
+#  Scenario: send a request to getBooksForUsers for all users
+#    When send request message to service getBooksForUsers for all users
+#    Then getBookForUser returns for all users with their own books
 
 
 
