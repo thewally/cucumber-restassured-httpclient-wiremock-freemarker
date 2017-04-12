@@ -14,7 +14,7 @@ Feature: HttpClient
       | 2 |
     Given user 2 has books with id
       | 2 |
-    Given service getBooksForUsers returns response for all users and for each user
+    Given service getBooksForUsers returns response for all users or by user id
     Then stop test
 
   Scenario: send a request to getBooksForUsers for user 1

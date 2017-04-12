@@ -63,8 +63,8 @@ public class SimpleWithWiremock {
         }
     }
 
-    @Given("^service getBooksForUsers returns response for all users and for each user$")
-    public void serviceGetBooksForUsersReturnsResponseForAllUsersAndForEachUser() throws Throwable {
+    @Given("^service getBooksForUsers returns response for all users or by user id$")
+    public void serviceGetBooksForUsersReturnsResponseForAllUsersOrByUserId() throws Throwable {
         TemplateHandler template = new TemplateHandler();
         for(User user:users) {
             List<User> tempUser = new ArrayList<>();
