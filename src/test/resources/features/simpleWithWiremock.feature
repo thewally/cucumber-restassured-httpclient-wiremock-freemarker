@@ -5,6 +5,7 @@ Feature: HttpClient
       | id | lastName    | firstName | streetName | houseNumber | postalCode | city      |
       | 1  | van der Wal | Arjen     | laanstraat | 100         | 1111AA     | Amsterdam |
       | 2  | Jansen      | Joyce     | kerklaan   | 10          | 1234BB     | Almere    |
+      | 3  | Meloen      | Coen      | Bergweg    | 50          | 3214QQ     | Rotterdam |
     Given books are available
       | id | title                                       | author        | year |
       | 1  | Beginning Programming with Java For Dummies | Barry A. Burd | 2014 |

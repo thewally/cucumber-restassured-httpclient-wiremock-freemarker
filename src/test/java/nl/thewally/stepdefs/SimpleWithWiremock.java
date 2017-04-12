@@ -11,7 +11,6 @@ import cucumber.api.java.en.When;
 import nl.thewally.freemarker.Book;
 import nl.thewally.freemarker.TemplateHandler;
 import nl.thewally.freemarker.User;
-import nl.thewally.stub.Stub;
 import org.junit.Rule;
 
 import java.util.ArrayList;
