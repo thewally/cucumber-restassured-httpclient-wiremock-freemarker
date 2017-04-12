@@ -1,14 +1,15 @@
 <getBooksForUsersResponse>
+    <#list users as user>
     <user>
-        <id>${id}</id>
-        <lastname>${lastName}</lastname>
-        <firstname>${firstName}</firstname>
-        <streetname>$streetName}</streetname>
-        <housenumber>${houseNumber}</housenumber>
-        <postalcode>${postalCode}</postalcode>
-        <city>${city}</city>
+        <id>${user.id}</id>
+        <lastname>${user.lastName}</lastname>
+        <firstname>${user.firstName}</firstname>
+        <streetname>${user.streetName}</streetname>
+        <housenumber>${user.houseNumber}</housenumber>
+        <postalcode>${user.postalCode}</postalcode>
+        <city>${user.city}</city>
         <books>
-            <#list books as book>
+            <#list user.books as book>
             <book>
                 <id>${book.id}</id>
                 <title>${book.title}</title>
@@ -18,4 +19,5 @@
             </#list>
         </books>
     </user>
+    </#list>
 </getBooksForUsersResponse>

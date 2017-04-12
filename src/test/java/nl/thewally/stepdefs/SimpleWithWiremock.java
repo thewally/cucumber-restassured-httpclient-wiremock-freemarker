@@ -67,15 +67,11 @@ public class SimpleWithWiremock {
     public void serviceGetBooksForUsersReturnsResponseForAllUsersAndForEachUser() throws Throwable {
         TemplateHandler template = new TemplateHandler();
         for(User user:users) {
+            List<User> tempUser = new ArrayList<>();
+            tempUser.add(user);
+
             template.setTemplate("responses/getBooksForUsers.response.xml.ftl");
-            template.setValue("id", user.getId());
-            template.setValue("lastName", user.getLastName());
-            template.setValue("firstName", user.getFirstName());
-            template.setValue("streetName", user.getStreetName());
-            template.setValue("houseNumber", user.getHouseNumber());
-            template.setValue("postalCode", user.getPostalCode());
-            template.setValue("city", user.getCity());
-            template.setValue("books", user.getBooks());
+            template.setValue("users", tempUser);
 
             UUID uuidVal = UUID.randomUUID();
             generic.stubFor(post(urlEqualTo("/getBooksForUsers"))
@@ -87,6 +83,18 @@ public class SimpleWithWiremock {
                             .withBody(template.getOutput())));
 
         }
+
+        template.setTemplate("responses/getBooksForUsers.response.xml.ftl");
+        template.setValue("users", users);
+
+        UUID uuidVal = UUID.randomUUID();
+        generic.stubFor(post(urlEqualTo("/getBooksForUsers"))
+                .withId(uuidVal)
+                .withRequestBody(containing("ALL"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/xml")
+                        .withBody(template.getOutput())));
     }
 
     @When("^send request message to service getBooksForUsers for user (\\d+)$")
