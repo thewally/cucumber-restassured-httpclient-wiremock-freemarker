@@ -132,16 +132,19 @@ public class SimpleWithWiremock {
         System.out.println(GetBooksForUsersService.getResponse());
 
         HttpXmlValidator response = new HttpXmlValidator(GetBooksForUsersService.getResponse());
+        NodeList nodeList = response.getDocument().getElementsByTagName("user").item(0).getChildNodes();
 
-        String x = response.getDocument().getChildNodes().item(0).getOwnerDocument().getElementsByTagName("title").item(1).getTextContent();
-        String lastname = response.getDocument().getElementsByTagName("user").item(0).getOwnerDocument().getElementsByTagName("lastname").item(0).getTextContent();
+        for(int x = 0; x < nodeList.getLength(); x++) {
+            System.out.println(nodeList.item(x).getNodeName());
+        }
 
+        String lastname = response.getDocument().getElementsByTagName("lastname").item(0).getTextContent();
+        System.out.println(lastname);
 //        Element y = (Element)response.getDocument().getElementsByTagName("user").item(0);
 //        Element q = (Element)y.getChildNodes().item(2);
 //        String x = q.getNodeValue();
 
 ////        Assert.assertTrue(users.getLength()==1);
-        System.out.println(x);
     }
 
     @Then("^stop test$")
