@@ -75,8 +75,8 @@ public class HttpServiceClient {
     }
 
     public String getResponse() {
-        return responseString;
-//        return prettyPrintXml(responseString);
+//        return responseString;
+        return prettyPrintXml(responseString);
     }
 
     public String getValueByTagName(String tagName) {

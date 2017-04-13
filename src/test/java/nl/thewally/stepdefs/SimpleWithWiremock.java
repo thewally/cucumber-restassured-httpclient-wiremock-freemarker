@@ -11,6 +11,7 @@ import cucumber.api.java.en.When;
 import nl.thewally.freemarker.Book;
 import nl.thewally.freemarker.TemplateHandler;
 import nl.thewally.freemarker.User;
+import nl.thewally.helpers.HttpServiceClient;
 import org.junit.Rule;
 
 import java.util.ArrayList;
@@ -27,11 +28,15 @@ public class SimpleWithWiremock {
     private List<User> users;
     private List<Book> books;
 
+    private HttpServiceClient GetBooksForUsersService;
+
     @Before
     public void prepare() {
         generic.start();
         WireMock.configureFor("localhost", 8888);
         WireMock.reset();
+
+        GetBooksForUsersService  = new HttpServiceClient("http://localhost:8888/GetBooksForUsers");
     }
 
     @Given("^users are available$")
@@ -73,7 +78,7 @@ public class SimpleWithWiremock {
             template.setValue("users", tempUser);
 
             UUID uuidVal = UUID.randomUUID();
-            generic.stubFor(post(urlEqualTo("/getBooksForUsers"))
+            generic.stubFor(post(urlEqualTo("/GetBooksForUsers"))
                     .withId(uuidVal)
                     .withRequestBody(containing(String.valueOf(user.getId())))
                     .willReturn(aResponse()
@@ -98,20 +103,16 @@ public class SimpleWithWiremock {
 
     @When("^send request message to service getBooksForUsers for user (\\d+)$")
     public void sendRequestMessageToServiceGetBooksForUsersForUser(int user) throws Throwable {
-        if(user != 0) {
-
-        } else {
-
-        }
+        TemplateHandler template = new TemplateHandler();
+        template.setTemplate("requests/getBooksForUsers.request.xml.ftl");
+        template.setValue("user", user);
+        GetBooksForUsersService.sendRequest(template.getOutput());
+        System.out.println("REQUEST:\n" +GetBooksForUsersService.getPostRequest());
     }
 
     @Then("^getBookForUser returns for user (\\d+) with their own books$")
     public void getbookforuserReturnsForUserWithTheirOwnBooks(int user) throws Throwable {
-        if(user != 0) {
-
-        } else {
-
-        }
+        System.out.println("RESPONSE:\n" +GetBooksForUsersService.getResponse());
     }
 
     @Then("^stop test$")
