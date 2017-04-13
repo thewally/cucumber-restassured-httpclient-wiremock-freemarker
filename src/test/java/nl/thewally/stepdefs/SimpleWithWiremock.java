@@ -106,7 +106,7 @@ public class SimpleWithWiremock {
         TemplateHandler template = new TemplateHandler();
         template.setTemplate("requests/getBooksForUsers.request.xml.ftl");
         template.setValue("user", user);
-        GetBooksForUsersService.sendRequest(template.getOutput());
+        GetBooksForUsersService.sendPostRequest(template.getOutput());
         System.out.println("REQUEST:\n" +GetBooksForUsersService.getPostRequest());
     }
 

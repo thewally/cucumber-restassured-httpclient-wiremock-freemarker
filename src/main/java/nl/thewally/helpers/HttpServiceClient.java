@@ -47,7 +47,7 @@ public class HttpServiceClient {
         this.endpoint = endpoint;
     }
 
-    public void sendRequest(String requestMessage) {
+    public void sendPostRequest(String requestMessage) {
         try {
             client = HttpClientBuilder.create().build();
             postRequest = new HttpPost(endpoint);
