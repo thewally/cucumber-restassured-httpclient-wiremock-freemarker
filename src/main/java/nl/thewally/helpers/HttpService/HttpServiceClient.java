@@ -1,5 +1,6 @@
-package nl.thewally.helpers;
+package nl.thewally.helpers.HttpService;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -9,14 +10,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.bootstrap.DOMImplementationRegistry;
-import org.w3c.dom.ls.DOMImplementationLS;
-import org.w3c.dom.ls.LSException;
-import org.w3c.dom.ls.LSSerializer;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -29,22 +24,40 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HttpServiceClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpServiceClient.class);
     private HttpClient client;
+    private static String CHARSET = "UTF-8";
+
+    private final String endpoint;
+
     private HttpPost postRequest;
     private HttpResponse response;
-    private final String endpoint;
+
     private String requestString, responseString;
+
+
+    private Map<String, String> headers = new HashMap<>();
 
     public HttpServiceClient(String endpoint) {
         this.endpoint = endpoint;
+    }
+
+    public void setHeader(String name, String value) {
+        headers.put(name, value);
+    }
+
+    public void setHeaders(Map<String, String> addHeaders) {
+        for (Map.Entry<String, String> header : addHeaders.entrySet()) {
+            headers.put(header.getKey(), header.getValue());
+        }
     }
 
     public void sendPostRequest(String requestMessage) {
@@ -52,8 +65,10 @@ public class HttpServiceClient {
             client = HttpClientBuilder.create().build();
             postRequest = new HttpPost(endpoint);
 
-            HttpEntity entity = new ByteArrayEntity(requestMessage.getBytes("UTF-8"));
-            postRequest.setHeader("Content-Type", "text/xml; charset=\"utf-8\"");
+            HttpEntity entity = new ByteArrayEntity(requestMessage.getBytes(CHARSET));
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                postRequest.setHeader(header.getKey(), header.getValue());
+            }
             postRequest.setEntity(entity);
             response = client.execute(postRequest);
         } catch (UnsupportedEncodingException e) {
@@ -69,13 +84,20 @@ public class HttpServiceClient {
             LOG.debug("Cannot parse message to String.");
         }
     }
+    public Header[] getRequestHeaders() {
+        return postRequest.getAllHeaders();
+    }
 
-    public String getPostRequest() {
-        return requestString;
+    public String getRequest() {
+        return parseMessageToString(postRequest);
+    }
+
+    public Header[] getResponseHeaders() {
+        return response.getAllHeaders();
     }
 
     public String getResponse() {
-        return responseString;
+        return parseMessageToString(response);
     }
 
     public String getValueByTagName(String tagName) {
@@ -83,7 +105,7 @@ public class HttpServiceClient {
         try {
             DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-            Document doc = docBuilder.parse(new InputSource(new ByteArrayInputStream(responseString.getBytes("UTF-8"))));
+            Document doc = docBuilder.parse(new InputSource(new ByteArrayInputStream(requestString.getBytes("UTF-8"))));
             NodeList nodeList = doc.getElementsByTagName(tagName);
             for (int i = 0; i < nodeList.getLength(); i++) {
                 values.add(nodeList.item(i).getTextContent());
@@ -121,5 +143,23 @@ public class HttpServiceClient {
             LOG.debug("Cannot parse response: " + e);
         }
         return values;
+    }
+
+    private String parseMessageToString(HttpPost request) {
+        try {
+            requestString = EntityUtils.toString(request.getEntity());
+        } catch (IOException e) {
+            LOG.debug("Cannot parse message to String.");
+        }
+        return requestString;
+    }
+
+    private String parseMessageToString(HttpResponse response) {
+        try {
+            responseString = EntityUtils.toString(response.getEntity());
+        } catch (IOException e) {
+            LOG.debug("Cannot parse message to String.");
+        }
+        return responseString;
     }
 }

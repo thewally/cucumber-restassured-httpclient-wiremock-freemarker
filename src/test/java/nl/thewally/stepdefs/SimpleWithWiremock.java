@@ -2,7 +2,6 @@ package nl.thewally.stepdefs;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import cucumber.api.PendingException;
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
@@ -11,8 +10,17 @@ import cucumber.api.java.en.When;
 import nl.thewally.freemarker.Book;
 import nl.thewally.freemarker.TemplateHandler;
 import nl.thewally.freemarker.User;
-import nl.thewally.helpers.HttpServiceClient;
+import nl.thewally.helpers.HttpService.HttpServiceClient;
+import nl.thewally.helpers.HttpService.HttpXmlValidator;
+import org.apache.http.Header;
+import org.junit.Assert;
 import org.junit.Rule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +91,7 @@ public class SimpleWithWiremock {
                     .withRequestBody(containing(String.valueOf(user.getId())))
                     .willReturn(aResponse()
                             .withStatus(200)
-                            .withHeader("Content-Type", "text/xml")
+                            .withHeader("Content-Type", "text/xml; charset=\"utf-8\"")
                             .withBody(template.getOutput())));
 
         }
@@ -97,7 +105,7 @@ public class SimpleWithWiremock {
                 .withRequestBody(containing("ALL"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "text/xml")
+                        .withHeader("Content-Type", "text/xml; charset=\"utf-8\"")
                         .withBody(template.getOutput())));
     }
 
@@ -106,13 +114,34 @@ public class SimpleWithWiremock {
         TemplateHandler template = new TemplateHandler();
         template.setTemplate("requests/getBooksForUsers.request.xml.ftl");
         template.setValue("user", user);
+        GetBooksForUsersService.setHeader("Content-Type", "text/xml; charset=\"utf-8\"");
         GetBooksForUsersService.sendPostRequest(template.getOutput());
-        System.out.println("REQUEST:\n" +GetBooksForUsersService.getPostRequest());
+        System.out.println("==REQUEST==");
+        for (Header header:GetBooksForUsersService.getRequestHeaders()) {
+            System.out.println(header.getName() + " : " + header.getValue());
+        }
+        System.out.println(GetBooksForUsersService.getRequest());
     }
 
     @Then("^getBookForUser returns for user (\\d+) with their own books$")
     public void getbookforuserReturnsForUserWithTheirOwnBooks(int user) throws Throwable {
-        System.out.println("RESPONSE:\n" +GetBooksForUsersService.getResponse());
+        System.out.println("==RESPONSE==");
+        for (Header header:GetBooksForUsersService.getResponseHeaders()) {
+            System.out.println(header.getName() + " : " + header.getValue());
+        }
+        System.out.println(GetBooksForUsersService.getResponse());
+
+        HttpXmlValidator response = new HttpXmlValidator(GetBooksForUsersService.getResponse());
+
+        String x = response.getDocument().getChildNodes().item(0).getOwnerDocument().getElementsByTagName("title").item(1).getTextContent();
+        String lastname = response.getDocument().getElementsByTagName("user").item(0).getOwnerDocument().getElementsByTagName("lastname").item(0).getTextContent();
+
+//        Element y = (Element)response.getDocument().getElementsByTagName("user").item(0);
+//        Element q = (Element)y.getChildNodes().item(2);
+//        String x = q.getNodeValue();
+
+////        Assert.assertTrue(users.getLength()==1);
+        System.out.println(x);
     }
 
     @Then("^stop test$")
