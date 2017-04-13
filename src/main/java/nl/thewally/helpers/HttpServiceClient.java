@@ -71,12 +71,11 @@ public class HttpServiceClient {
     }
 
     public String getPostRequest() {
-        return prettyPrintXml(requestString);
+        return requestString;
     }
 
     public String getResponse() {
-//        return responseString;
-        return prettyPrintXml(responseString);
+        return responseString;
     }
 
     public String getValueByTagName(String tagName) {
@@ -122,24 +121,5 @@ public class HttpServiceClient {
             LOG.debug("Cannot parse response: " + e);
         }
         return values;
-    }
-
-    private String prettyPrintXml(String xml) {
-        try {
-            final InputSource src = new InputSource(new StringReader(xml));
-            final Node document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(src).getDocumentElement();
-            final Boolean keepDeclaration = xml.startsWith("<?xml");
-
-            final DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
-            final DOMImplementationLS impl = (DOMImplementationLS) registry.getDOMImplementation("LS");
-            final LSSerializer writer = impl.createLSSerializer();
-
-            writer.getDomConfig().setParameter("format-pretty-print", Boolean.TRUE);
-            writer.getDomConfig().setParameter("xml-declaration", keepDeclaration);
-
-            return writer.writeToString(document);
-        } catch (ParserConfigurationException | SAXException | IOException | ClassNotFoundException | InstantiationException | IllegalAccessException | ClassCastException | DOMException | LSException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
