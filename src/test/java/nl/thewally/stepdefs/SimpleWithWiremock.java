@@ -158,7 +158,8 @@ public class SimpleWithWiremock {
         String xml = response.andReturn().asString();
         for(User user: users) {
             if(String.valueOf(user.getId()).equals(userId) || userId.equals("ALL")){
-                XmlPath userInfo = new XmlPath(xml).setRoot("getBooksForUsersResponse.users.user.findAll { it.id == '"+String.valueOf(user.getId())+"'}");
+                XmlPath userInfo = new XmlPath(xml).setRoot("getBooksForUsersResponse.users.user"
+                        + ".findAll { it.id == '"+String.valueOf(user.getId())+"'}");
                 List<Book> books = user.getBooks();
                 Assert.assertEquals(user.getLastName(),userInfo.get("lastname"));
                 Assert.assertEquals(user.getFirstName(),userInfo.get("firstname"));
@@ -170,7 +171,10 @@ public class SimpleWithWiremock {
                 } else {
                     Assert.assertEquals(books.size(), userInfo.get("books.book.size()"));
                     for(Book book:books) {
-                        XmlPath bookInfo = new XmlPath(xml).setRoot("getBooksForUsersResponse.users.user.findAll { it.id == '"+String.valueOf(user.getId())+"'}.books.book.findAll { it.id == '"+String.valueOf(book.getId())+"'}");
+                        XmlPath bookInfo = new XmlPath(xml).setRoot("getBooksForUsersResponse.users.user"
+                                + ".findAll { it.id == '"+String.valueOf(user.getId())+"'}"
+                                + ".books.book"
+                                + ".findAll { it.id == '"+String.valueOf(book.getId())+"'}");
                         Assert.assertEquals(String.valueOf(book.getId()),bookInfo.get("id"));
                         Assert.assertEquals(book.getTitle(),bookInfo.get("title"));
                         Assert.assertEquals(book.getAuthor(),bookInfo.get("author"));
