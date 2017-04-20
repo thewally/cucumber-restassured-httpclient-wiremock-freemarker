@@ -7,12 +7,17 @@ import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+import io.restassured.path.xml.XmlPath;
+import io.restassured.response.Response;
+import io.restassured.response.ValidatableResponse;
+
+import io.restassured.specification.RequestSpecification;
 import nl.thewally.freemarker.Book;
 import nl.thewally.freemarker.TemplateHandler;
 import nl.thewally.freemarker.User;
-import nl.thewally.helpers.HttpService.HttpServiceClient;
-import nl.thewally.helpers.HttpService.HttpXmlValidator;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
+import org.eclipse.jetty.util.StringUtil;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.slf4j.Logger;
@@ -22,11 +27,21 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import sun.java2d.pipe.SpanShapeRenderer;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static io.restassured.matcher.RestAssuredMatchers.*;
+import static org.hamcrest.Matchers.*;
+import static io.restassured.RestAssured.*;
+
+
 
 public class SimpleWithWiremock {
 
@@ -36,15 +51,14 @@ public class SimpleWithWiremock {
     private List<User> users;
     private List<Book> books;
 
-    private HttpServiceClient GetBooksForUsersService;
+    private RequestSpecification request;
+    private Response response;
 
     @Before
     public void prepare() {
         generic.start();
         WireMock.configureFor("localhost", 8888);
         WireMock.reset();
-
-        GetBooksForUsersService  = new HttpServiceClient("http://localhost:8888/GetBooksForUsers");
     }
 
     @Given("^users are available$")
@@ -100,7 +114,7 @@ public class SimpleWithWiremock {
         template.setValue("users", users);
 
         UUID uuidVal = UUID.randomUUID();
-        generic.stubFor(post(urlEqualTo("/getBooksForUsers"))
+        generic.stubFor(post(urlEqualTo("/GetBooksForUsers"))
                 .withId(uuidVal)
                 .withRequestBody(containing("ALL"))
                 .willReturn(aResponse()
@@ -109,42 +123,62 @@ public class SimpleWithWiremock {
                         .withBody(template.getOutput())));
     }
 
-    @When("^send request message to service getBooksForUsers for user (\\d+)$")
-    public void sendRequestMessageToServiceGetBooksForUsersForUser(int user) throws Throwable {
+
+
+    @When("^send request message to service getBooksForUsers for (.*)$")
+    public void sendRequestMessageForUser(String user) throws Throwable {
+        if(!user.equals("ALL")) {
+            try {
+                Integer.parseInt(user);
+            } catch (NumberFormatException e) {
+                Assert.fail("Value "+user+" is not supported. Use userId or value 'ALL'");
+            }
+        }
+
         TemplateHandler template = new TemplateHandler();
         template.setTemplate("requests/getBooksForUsers.request.xml.ftl");
         template.setValue("user", user);
-        GetBooksForUsersService.setHeader("Content-Type", "text/xml; charset=\"utf-8\"");
-        GetBooksForUsersService.sendPostRequest(template.getOutput());
-        System.out.println("==REQUEST==");
-        for (Header header:GetBooksForUsersService.getRequestHeaders()) {
-            System.out.println(header.getName() + " : " + header.getValue());
-        }
-        System.out.println(GetBooksForUsersService.getRequest());
+        request = given().header("Content-Type","text/xml; charset=\"utf-8\"").body(template.getOutput());
+        response = request.when().post("http://localhost:8888/GetBooksForUsers");
     }
 
-    @Then("^getBookForUser returns for user (\\d+) with their own books$")
-    public void getbookforuserReturnsForUserWithTheirOwnBooks(int user) throws Throwable {
-        System.out.println("==RESPONSE==");
-        for (Header header:GetBooksForUsersService.getResponseHeaders()) {
-            System.out.println(header.getName() + " : " + header.getValue());
-        }
-        System.out.println(GetBooksForUsersService.getResponse());
+    @Then("^getBookForUser returns for (.*) with their own books$")
+    public void checkBooksForUsers(String userId) throws Throwable {
+        response.prettyPrint();
+        response.then().assertThat().statusCode(200);
 
-        HttpXmlValidator response = new HttpXmlValidator(GetBooksForUsersService.getResponse());
-        NodeList nodeList = response.getDocument().getElementsByTagName("user").item(0).getChildNodes();
-
-        for(int x = 0; x < nodeList.getLength(); x++) {
-            System.out.println(nodeList.item(x).getNodeName());
+        if(!userId.equals("ALL")) {
+            try {
+                Integer.parseInt(userId);
+            } catch (NumberFormatException e) {
+                Assert.fail("Value "+userId+" is not supported. Use userId or value 'ALL'");
+            }
         }
 
-        String lastname = response.getDocument().getElementsByTagName("lastname").item(0).getTextContent();
-        System.out.println(lastname);
-//        Element y = (Element)response.getDocument().getElementsByTagName("user").item(0);
-//        Element q = (Element)y.getChildNodes().item(2);
-//        String x = q.getNodeValue();
-
-////        Assert.assertTrue(users.getLength()==1);
+        String xml = response.andReturn().asString();
+        for(User user: users) {
+            if(String.valueOf(user.getId()).equals(userId) || userId.equals("ALL")){
+                XmlPath userInfo = new XmlPath(xml).setRoot("getBooksForUsersResponse.users.user.findAll { it.id == '"+String.valueOf(user.getId())+"'}");
+                List<Book> books = user.getBooks();
+                Assert.assertEquals(user.getLastName(),userInfo.get("lastname"));
+                Assert.assertEquals(user.getFirstName(),userInfo.get("firstname"));
+                Assert.assertEquals(String.valueOf(user.getHouseNumber()),userInfo.get("housenumber"));
+                Assert.assertEquals(user.getPostalCode(),userInfo.get("postalcode"));
+                Assert.assertEquals(user.getCity(),userInfo.get("city"));
+                if(books == null) {
+                    Assert.assertEquals(0, userInfo.get("books.book.size()"));
+                } else {
+                    Assert.assertEquals(books.size(), userInfo.get("books.book.size()"));
+                    for(Book book:books) {
+                        XmlPath bookInfo = new XmlPath(xml).setRoot("getBooksForUsersResponse.users.user.findAll { it.id == '"+String.valueOf(user.getId())+"'}.books.book.findAll { it.id == '"+String.valueOf(book.getId())+"'}");
+                        Assert.assertEquals(String.valueOf(book.getId()),bookInfo.get("id"));
+                        Assert.assertEquals(book.getTitle(),bookInfo.get("title"));
+                        Assert.assertEquals(book.getAuthor(),bookInfo.get("author"));
+                        Assert.assertEquals(book.getYear(),bookInfo.get("year"));
+                    }
+                }
+            }
+        }
     }
 
     @Then("^stop test$")
