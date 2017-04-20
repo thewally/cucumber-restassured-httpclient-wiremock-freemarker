@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/cucumber-restassured-httpclient-wiremock-freemarker.iml" filepath="$PROJECT_DIR$/cucumber-restassured-httpclient-wiremock-freemarker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cucumber-restassured-wiremock-freemarker.iml" filepath="$PROJECT_DIR$/cucumber-restassured-wiremock-freemarker.iml" />
     </modules>
   </component>
 </project>
