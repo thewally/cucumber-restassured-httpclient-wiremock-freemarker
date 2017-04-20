@@ -9,36 +9,20 @@ import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import io.restassured.path.xml.XmlPath;
 import io.restassured.response.Response;
-import io.restassured.response.ValidatableResponse;
-
 import io.restassured.specification.RequestSpecification;
 import nl.thewally.freemarker.Book;
 import nl.thewally.freemarker.TemplateHandler;
 import nl.thewally.freemarker.User;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Header;
-import org.eclipse.jetty.util.StringUtil;
 import org.junit.Assert;
 import org.junit.Rule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import sun.java2d.pipe.SpanShapeRenderer;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Matcher;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static io.restassured.matcher.RestAssuredMatchers.*;
-import static org.hamcrest.Matchers.*;
 import static io.restassured.RestAssured.*;
 
 
