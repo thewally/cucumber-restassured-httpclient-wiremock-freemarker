@@ -43,7 +43,7 @@ import static io.restassured.RestAssured.*;
 
 
 
-public class SimpleWithWiremock {
+public class GetBooksForUsers {
 
     @Rule
     public WireMockRule generic = new WireMockRule(8888);
