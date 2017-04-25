@@ -1,3 +1,4 @@
+@general
 Feature: HttpClient
 
   Background:
