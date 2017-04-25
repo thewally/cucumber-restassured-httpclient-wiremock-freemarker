@@ -13,14 +13,8 @@ import io.restassured.specification.RequestSpecification;
 import nl.thewally.freemarker.Book;
 import nl.thewally.freemarker.TemplateHandler;
 import nl.thewally.freemarker.User;
-import nl.thewally.properties.TestProperties;
 import org.junit.Assert;
 import org.junit.Rule;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,10 +25,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static io.restassured.RestAssured.*;
 
-
-@Configuration
-@PropertySource("classpath:test.properties")
-public class GetBooksForUsers {
+public class StepDefs {
 
     @Rule
     public WireMockRule generic = new WireMockRule(8888);
@@ -45,16 +36,11 @@ public class GetBooksForUsers {
     private RequestSpecification request;
     private Response response;
 
-    @Autowired
-    private Environment env;
-
     @Before
     public void prepare() {
-        if(!generic.isRunning()) {
-            generic.start();
-            WireMock.configureFor(env.getProperty("server.host"), 8888);
-            WireMock.reset();
-        }
+        generic.start();
+        WireMock.configureFor("localhost", 8888);
+        WireMock.reset();
     }
 
     @Given("^users are available$")
@@ -96,7 +82,7 @@ public class GetBooksForUsers {
             template.setValue("users", tempUser);
 
             UUID uuidVal = UUID.randomUUID();
-            generic.stubFor(post(urlEqualTo("/GetBooksForUsers"))
+            generic.stubFor(post(urlEqualTo("/StepDefs"))
                     .withId(uuidVal)
                     .withRequestBody(containing(String.valueOf(user.getId())))
                     .willReturn(aResponse()
@@ -110,7 +96,7 @@ public class GetBooksForUsers {
         template.setValue("users", users);
 
         UUID uuidVal = UUID.randomUUID();
-        generic.stubFor(post(urlEqualTo("/GetBooksForUsers"))
+        generic.stubFor(post(urlEqualTo("/StepDefs"))
                 .withId(uuidVal)
                 .withRequestBody(containing("ALL"))
                 .willReturn(aResponse()
@@ -135,7 +121,7 @@ public class GetBooksForUsers {
         template.setTemplate("requests/getBooksForUsers.request.xml.ftl");
         template.setValue("user", user);
         request = given().header("Content-Type","text/xml; charset=\"utf-8\"").body(template.getOutput());
-        response = request.when().post("http://localhost:8888/GetBooksForUsers");
+        response = request.when().post("http://localhost:8888/StepDefs");
     }
 
     @Then("^getBookForUser returns for (.*) with their own books$")
@@ -188,8 +174,6 @@ public class GetBooksForUsers {
 
     @After
     public void close() {
-        if(generic.isRunning()) {
-            generic.stop();
-        }
+        generic.stop();
     }
 }
