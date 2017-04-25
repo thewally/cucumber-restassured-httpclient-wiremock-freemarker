@@ -19,10 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.containing;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static io.restassured.RestAssured.*;
 
 public class StepDefs {
@@ -82,7 +79,7 @@ public class StepDefs {
             template.setValue("users", tempUser);
 
             UUID uuidVal = UUID.randomUUID();
-            generic.stubFor(post(urlEqualTo("/StepDefs"))
+            generic.stubFor(post(urlEqualTo("/GetBooksForUsers"))
                     .withId(uuidVal)
                     .withRequestBody(containing(String.valueOf(user.getId())))
                     .willReturn(aResponse()
@@ -96,13 +93,50 @@ public class StepDefs {
         template.setValue("users", users);
 
         UUID uuidVal = UUID.randomUUID();
-        generic.stubFor(post(urlEqualTo("/StepDefs"))
+        generic.stubFor(post(urlEqualTo("/GetBooksForUsers"))
                 .withId(uuidVal)
                 .withRequestBody(containing("ALL"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "text/xml; charset=\"utf-8\"")
                         .withBody(template.getOutput())));
+    }
+
+    @Given("^possible states are available$")
+    public void possibleStatesAreAvailable(List<String> states) throws Throwable {
+        TemplateHandler template = new TemplateHandler();
+        for(String state:states) {
+            template.setTemplate("responses/setState.response.xml.ftl");
+            template.setValue("state", state);
+
+            UUID uuidVal = UUID.randomUUID();
+            generic.stubFor(post(urlEqualTo("/SetState"))
+                    .inScenario("SCENARIO")
+                    .withId(uuidVal)
+                    .withRequestBody(containing(state))
+                    .willSetStateTo(state)
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "text/xml; charset=\"utf-8\"")
+                            .withBody(template.getOutput())));
+
+        }
+
+        template = new TemplateHandler();
+
+        for (String state : states) {
+            template.setTemplate("responses/getState.response.xml.ftl");
+            template.setValue("state", state);
+            UUID uuidVal = UUID.randomUUID();
+            generic.stubFor(get(urlEqualTo("/GetState"))
+                    .inScenario("SCENARIO")
+                    .whenScenarioStateIs(state)
+                    .withId(uuidVal)
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "text/xml; charset=\"utf-8\"")
+                            .withBody(template.getOutput())));
+        }
     }
 
 
@@ -121,7 +155,7 @@ public class StepDefs {
         template.setTemplate("requests/getBooksForUsers.request.xml.ftl");
         template.setValue("user", user);
         request = given().header("Content-Type","text/xml; charset=\"utf-8\"").body(template.getOutput());
-        response = request.when().post("http://localhost:8888/StepDefs");
+        response = request.when().post("http://localhost:8888/GetBooksForUsers");
     }
 
     @Then("^getBookForUser returns for (.*) with their own books$")
@@ -171,6 +205,36 @@ public class StepDefs {
     public void stopTest() throws Throwable {
         Thread.sleep(300000);
     }
+
+    @When("^change state to (.*)$")
+    public void changeStateTo(String state) throws Throwable {
+        TemplateHandler template = new TemplateHandler();
+        template.setTemplate("requests/setState.request.xml.ftl");
+        template.setValue("state", state);
+        request = given().header("Content-Type","text/xml; charset=\"utf-8\"").body(template.getOutput());
+        response = request.when().post("http://localhost:8888/SetState");
+
+        response.prettyPrint();
+
+        response.then().assertThat().statusCode(200);
+        String xml = response.andReturn().asString();
+        XmlPath result = new XmlPath(xml).setRoot("setStateResponse");
+        Assert.assertEquals("OK",result.get("result"));
+    }
+
+    @Then("^state is changed to (.*)$")
+    public void stateIsChangedTo(String state) throws Throwable {
+        request = given();
+        response = request.when().get("http://localhost:8888/GetState");
+
+        response.prettyPrint();
+
+        response.then().assertThat().statusCode(200);
+        String xml = response.andReturn().asString();
+        XmlPath result = new XmlPath(xml).setRoot("getStateResponse");
+        Assert.assertEquals(state,result.get("state"));
+    }
+
 
     @After
     public void close() {

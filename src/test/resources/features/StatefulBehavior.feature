@@ -7,8 +7,15 @@ Feature: Stateful Example
       | INACTIVE |
       | EXPIRED  |
       | BLOCKED  |
-    Then stop test
 
   Scenario: Set States
+    When change state to ACTIVE
+    Then state is changed to ACTIVE
+    When change state to INACTIVE
+    Then state is changed to INACTIVE
+    When change state to EXPIRED
+    Then state is changed to EXPIRED
+    When change state to BLOCKED
+    Then state is changed to BLOCKED
     When change state to ACTIVE
     Then state is changed to ACTIVE
