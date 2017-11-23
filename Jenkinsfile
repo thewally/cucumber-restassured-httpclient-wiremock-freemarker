@@ -4,6 +4,7 @@ pipeline {
         stage('Built') {
             steps {
                 sh 'mvn clean install'
+                cucumber fileIncludePattern: '**/*.json', jsonReportDirectory: 'target/cucumber.json', sortingMethod: 'ALPHABETICAL'
             }
         }
     }
