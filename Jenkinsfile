@@ -1,10 +1,11 @@
 pipeline {
     agent none
     stages {
-        stage('Example Build') {
-            steps {
-                sh 'mvn clean install'
-            }
-        }
+       stage('Preparation') {
+          git 'https://github.com/jglick/simple-maven-project-with-tests.git'
+       }
+       stage('Build') {
+             sh "mvn clean install"
+       }
     }
 }
