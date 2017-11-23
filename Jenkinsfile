@@ -1,11 +1,10 @@
 pipeline {
-    agent none
+    agent any
     stages {
-       stage('Preparation') {
-          git 'https://github.com/thewally/cucumber-restassured-wiremock-freemarker.git'
-       }
-       stage('Build') {
-             sh "mvn clean install"
-       }
+        stage('Built') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
     }
 }
