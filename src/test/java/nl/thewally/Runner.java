@@ -7,7 +7,7 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         monochrome = true,
-        plugin = {"pretty", "json:target/cucumber"},
+        plugin = {"pretty", "html:target/cucumber"},
         dryRun = false,
         glue = {"nl.thewally.stepdefs"},
         features = {"src/test/resources/features"}
